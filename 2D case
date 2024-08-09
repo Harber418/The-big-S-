@@ -1,3 +1,4 @@
+
 import numpy as np 
 from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigs
@@ -9,22 +10,44 @@ from matplotlib.animation import PillowWriter
 from scipy import sparse 
 
 
-N = 400 
+N = 40
 
+
+#creats a meshgrid of x and y coordinates 
+#starting at 0 and ending at 1 with N points inbetween 
 X, Y = np.mgrid[0:1:N*1j,0:1:N*1j]
 
 
-def get_potential(x,y):
+def get_potential(x,y,pos_x,pos_y ):
     """
     takes the potential in x and the optenital in y 
     this is the term m delta x squared V 
     """
-    return np.exp(-(x-0.3)**2/(2*0.1**2))*np.exp(-(y-0.3)**2/(2*0.1**2))
+    return np.exp(-(x-pos_x)**2/(2*0.1**2))*np.exp(-(y-pos_y)**2/(2*0.1**2))
 
-V = get_potential(X,Y)
+
+def get_V_sin(x,y, pos_x,pos_y):
+    """
+    """
+    return np.sin(x - pos_x) * np.sin(y - pos_y)
+
+def quad(x,y,i ,j ):    
+    """
+    """
+    return (x-i)*(y-j)
+
+def zero(x,y):
+    return x*0 + y*0
+
+def hydrogen(x,y,c,p):
+    return (c/((x-p)**2 + (y-p)**2))
+    
+# V is the total potential of the system 
+V = get_potential(X,Y,0.5,0.5)
 
 #Now constructing the Hamiltonian  
 row  = np.ones([N])
+
 Matrix = np.array([row, -2*row, row])
 
 D = sparse.spdiags((Matrix), np.array([-1,0,1]),N,N)
@@ -40,7 +63,33 @@ eigenvalues, eigenvectors = eigsh(H, k = 10, which = 'SM')
 def get_e(n):
     return eigenvectors.T[n].reshape((N,N))
 
-plt.figure(figsize=(6,6))
-plt.pcolormesh(X, Y, get_e(1)**2, cmap='nipy_spectral')
-plt.axis('off')
-plt.show()
+#-------------------------------------------------------------
+
+my_cmap = plt.get_cmap('cool')
+def init():
+    # Plot the surface.
+    ax.plot_surface(X, Y, get_e(3)**2, cmap=my_cmap,
+                       linewidth=0, antialiased=False)
+    ax.set_xlabel('$x/a$')
+    ax.set_ylabel('$y/a$')
+    ax.set_zlabel('$\propto|\psi|^2$')
+    return fig,
+
+def animate(i):
+    ax.view_init(elev=10, azim=4*i)
+    return fig,
+
+fig = plt.figure()
+ax = Axes3D(fig)
+ani = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=90, interval=50)
+ani.save('rotate_azimuth_angle_3d_surf.gif',writer='pillow',fps=20)
+
+#-------------------------------------------------------------
+
+plt.figure(figsize=(9,9))
+plt.contourf(X,Y,get_e(1)**2,20)
+#plt.figure(figsize=(6,6))
+#plt.pcolormesh(X, Y, get_e(1)**2, cmap='nipy_spectral')
+#plt.axis('off')
+#plt.show()
