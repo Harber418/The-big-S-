@@ -1,0 +1,46 @@
+import numpy as np 
+from scipy.sparse.linalg import eigsh
+from scipy.sparse.linalg import eigs
+import matplotlib.pyplot as plt 
+from matplotlib import animation 
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import PillowWriter
+#plt.style.use(['science', 'notebook'])
+from scipy import sparse 
+
+
+N = 400 
+
+X, Y = np.mgrid[0:1:N*1j,0:1:N*1j]
+
+
+def get_potential(x,y):
+    """
+    takes the potential in x and the optenital in y 
+    this is the term m delta x squared V 
+    """
+    return np.exp(-(x-0.3)**2/(2*0.1**2))*np.exp(-(y-0.3)**2/(2*0.1**2))
+
+V = get_potential(X,Y)
+
+#Now constructing the Hamiltonian  
+row  = np.ones([N])
+Matrix = np.array([row, -2*row, row])
+
+D = sparse.spdiags((Matrix), np.array([-1,0,1]),N,N)
+
+T = -1/2 * sparse.kronsum(D,D)
+
+U = sparse.diags(V.reshape(N**2), (0))
+
+H = T + U 
+
+eigenvalues, eigenvectors = eigsh(H, k = 10, which = 'SM')
+
+def get_e(n):
+    return eigenvectors.T[n].reshape((N,N))
+
+plt.figure(figsize=(6,6))
+plt.pcolormesh(X, Y, get_e(1)**2, cmap='nipy_spectral')
+plt.axis('off')
+plt.show()
