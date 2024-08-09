@@ -1,0 +1,56 @@
+import numpy as np 
+import matplotlib.pyplot as plt
+from scipy.linalg import eigh_tridiagonal
+
+# N is the number of iteriations you want. so it also is the size of the matrix
+N = 2000
+#dy is the size of the spacing so you divide the whole space by the number of slices 
+dy = 1/N
+# y is the array of floats for the inputs to our schrodenger function
+y = np.linspace(0,1,N+1)
+
+def ml2v(y):
+    """
+    function to calculate the output of the function for ml2v with input y 
+    we set L to be big as to reconstruct the conditions of a unbounded well 
+    this is for a potential that is quadratic with a minima at 0.5 
+    """
+    return 1000*(y-1/2)**2
+
+
+def ml2v_exp(y):
+    """
+    potential for and expenential spike at 0.6
+    """
+    return 1000*np.exp(-(y-0.6)**2 / (2*0.05)**2)
+
+# creates an array for the diagonal elements of the matrix 
+diagonal  = 1/dy**2 + ml2v(y)[1:-1]
+
+#the elements of the array for the secondary diagonals 
+auxiliary = -1/(2*dy**2) *np.ones(len(diagonal)-1)
+
+w, v = eigh_tridiagonal(diagonal, auxiliary)
+
+# creates an array for the diagonal elements of the matrix 
+diagonal_exp  = 1/dy**2 + ml2v_exp(y)[1:-1]
+
+#the elements of the array for the secondary diagonals 
+auxiliary_exp = -1/(2*dy**2) *np.ones(len(diagonal_exp)-1)
+
+w_exp, v_exp = eigh_tridiagonal(diagonal_exp, auxiliary_exp)
+def base_states(v):
+    
+    plt.plot(v.T[0])
+    plt.plot(v.T[1])
+    plt.plot(v.T[2])
+    plt.plot(v.T[3])
+
+def base_pontntial(v):
+        
+    plt.plot(v.T[0]**2)
+    plt.plot(v.T[1]**2)
+    plt.plot(v.T[2]**2)
+    plt.plot(v.T[3]**2)
+    
+base_pontntial(v_exp)
